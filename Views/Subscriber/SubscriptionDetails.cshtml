@@ -1,0 +1,26 @@
+@model LibraryManagementSystem.Models.User
+@{
+    ViewData["Title"] = "Subscription Details";
+}
+
+<h2>Subscription Details</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div>
+    <p><strong>Name:</strong> @Model.Name</p>
+    <p><strong>Library Code:</strong> @Model.LibraryCode</p>
+    <p><strong>Subscription End Date:</strong> @Model.SubscriptionEndDate.ToShortDateString()</p>
+    <p><strong>Status:</strong> @Model.Status</p>
+    <form asp-action="RenewSubscription" method="post" style="display:inline;">
+        <button type="submit" class="btn btn-primary me-2">Renew Subscription</button>
+    </form>
+    <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+</div>

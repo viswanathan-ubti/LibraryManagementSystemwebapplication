@@ -1,8 +1,13 @@
-namespace LibraryManagementSystem.Models;
-
-public class ErrorViewModel
+namespace LibraryManagementSystem.Models
 {
-    public string? RequestId { get; set; }
+    public class ErrorViewModel
+    {
+        public string Message { get; set; }
+        public bool HasError => !string.IsNullOrEmpty(Message);
 
-    public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+        public ErrorViewModel(string message = null)
+        {
+            Message = message;
+        }
+    }
 }

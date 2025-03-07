@@ -1,0 +1,51 @@
+@model List<LibraryManagementSystem.Models.User>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<h2>Manage Users</h2>
+
+<a asp-action="AddUser" class="btn btn-success mb-3 me-2">Add New User</a>
+<a asp-action="Index" class="btn btn-secondary mb-3">Back to Dashboard</a>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Library Code</th>
+            <th>Subscription End Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Name</td>
+                <td>@user.LibraryCode</td>
+                <td>@user.SubscriptionEndDate.ToShortDateString()</td>
+                <td>@user.Status</td>
+                <td>
+                    <form asp-action="RemoveUser" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to remove the user: @user.Name?');">
+                        <input type="hidden" name="libraryCode" value="@user.LibraryCode" />
+                        <button type="submit" class="btn btn-danger btn-sm me-2">Remove</button>
+                    </form>
+                    <form asp-action="RenewUserSubscription" method="post" style="display:inline;">
+                        <input type="hidden" name="libraryCode" value="@user.LibraryCode" />
+                        <button type="submit" class="btn btn-primary btn-sm me-2">Renew</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

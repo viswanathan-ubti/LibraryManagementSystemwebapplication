@@ -1,0 +1,19 @@
+@model LibraryManagementSystem.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Add User";
+}
+
+<h2>Add New User</h2>
+
+<form asp-action="AddUser" method="post">
+    <div class="form-group mb-3">
+        <label>Name</label>
+        <input name="name" class="form-control" required />
+    </div>
+    <div class="form-group mb-3">
+        <label>Library Code</label>
+        <input name="libraryCode" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary me-2">Add User</button>
+    <a asp-action="ManageUsers" class="btn btn-secondary">Back to Users</a>
+</form>

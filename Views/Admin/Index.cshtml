@@ -1,0 +1,39 @@
+@model LibraryManagementSystem.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2>Admin Dashboard</h2>
+
+<div class="mt-4">
+    <p>Welcome, Admin! Here’s an overview of your library management tasks:</p>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Books</h5>
+                    <p class="card-text">Add, remove, or view all books in the library.</p>
+                    <a asp-action="ManageBooks" class="btn btn-primary m-2">Go to Books</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Users</h5>
+                    <p class="card-text">Handle subscriber accounts and subscriptions.</p>
+                    <a asp-action="ManageUsers" class="btn btn-secondary m-2">Go to Users</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Logout</h5>
+                    <p class="card-text">End your session securely.</p>
+                    <a asp-action="Logout" class="btn btn-danger m-2">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

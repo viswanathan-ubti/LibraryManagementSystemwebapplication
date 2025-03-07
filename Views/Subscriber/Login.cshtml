@@ -1,0 +1,16 @@
+
+@model LibraryManagementSystem.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Subscriber Login";
+}
+
+<h2>Subscriber Login</h2>
+
+<form asp-action="Login" method="post">
+    <div class="form-group mb-3">
+        <label>Library Code</label>
+        <input name="libraryCode" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary me-2">Login</button>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>
+</form>

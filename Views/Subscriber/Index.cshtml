@@ -1,0 +1,65 @@
+@model List<LibraryManagementSystem.Models.Book>
+@{
+    ViewData["Title"] = "Subscriber Dashboard";
+}
+
+<h2>Subscriber Dashboard</h2>
+
+<div class="mt-4">
+    <p>Welcome, Subscriber! Explore the library and manage your borrowing:</p>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Borrow a Book</h5>
+                    <p class="card-text">Find and borrow books from our collection.</p>
+                    <a asp-action="BorrowBook" class="btn btn-primary m-2">Borrow Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Return a Book</h5>
+                    <p class="card-text">Return borrowed books here.</p>
+                    <a asp-action="ReturnBook" class="btn btn-secondary m-2">Return Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Subscription</h5>
+                    <p class="card-text">Check or renew your subscription.</p>
+                    <a asp-action="SubscriptionDetails" class="btn btn-info m-2">View Subscription</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 class="mt-4">Available Books in the Library</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Book Code</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model)
+        {
+            <tr>
+                <td>@book.Title</td>
+                <td>@book.Author</td>
+                <td>@book.BookCode</td>
+                <td>@(book.IsAvailable ? "Available" : "Borrowed")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Logout" class="btn btn-danger me-2">Logout</a>
+<a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>

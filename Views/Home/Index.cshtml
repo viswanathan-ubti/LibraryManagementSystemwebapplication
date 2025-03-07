@@ -1,8 +1,20 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model LibraryManagementSystem.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Library Management System";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1>Welcome to the Library Management System</h1>
+    <p>Please select your role:</p>
+    <a asp-controller="Admin" asp-action="Login" class="btn btn-primary m-2">Admin Login</a>
+    <a asp-controller="Subscriber" asp-action="Login" class="btn btn-secondary m-2">Subscriber Login</a>
+</div>
+
+<div class="mt-4">
+    <h2>About Us</h2>
+    <p>
+        The Library Management System is designed to streamline the process of managing books, users, and subscriptions.
+        Whether you're an admin managing the library or a subscriber borrowing books, our system provides an easy-to-use interface
+        to meet your needs. Explore our features and enjoy a seamless library experience!
+    </p>
 </div>
