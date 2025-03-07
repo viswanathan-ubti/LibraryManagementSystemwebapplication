@@ -1,0 +1,82 @@
+@model LibraryManagementSystem.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Todo List";
+}
+
+<h2>Todo List</h2>
+
+<div class="mb-3">
+    <input type="text" id="todoTitle" class="form-control" placeholder="Enter todo title" />
+    <button id="addTodo" class="btn btn-primary mt-2">Add Todo</button>
+</div>
+
+<ul id="todoList" class="list-group"></ul>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Load todo on page load
+            loadTodos();
+
+            // Add todo
+            $("#addTodo").click(function () {
+                var title = $("#todoTitle").val();
+                if (title) {
+                    $.ajax({
+                        url: '/api/TodoApi',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ title: title, isCompleted: false }),
+                        success: function () {
+                            $("#todoTitle").val('');
+                            loadTodos();
+                        },
+                        error: function (xhr) {
+                            alert('Error adding todo: ' + xhr.responseText);
+                        }
+                    });
+                }
+            });
+
+            // Load todo
+            function loadTodos() {
+                $.get('/api/TodoApi', function (data) {
+                    $("#todoList").empty();
+                    data.forEach(function (todo) {
+                        var li = $('<li class="list-group-item d-flex justify-content-between align-items-center"></li>')
+                            .text(todo.title)
+                            .append($('<input type="checkbox" class="form-check-input me-2">')
+                                .prop('checked', todo.isCompleted)
+                                .change(function () { updateTodo(todo.id, $(this).is(':checked')); }))
+                            .append($('<button class="btn btn-danger btn-sm">Delete</button>')
+                                .click(function () { deleteTodo(todo.id); }));
+                        $("#todoList").append(li);
+                    });
+                });
+            }
+
+            // Update todo completion
+            function updateTodo(id, isCompleted) {
+                $.ajax({
+                    url: '/api/TodoApi/' + id,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: id, title: '', isCompleted: isCompleted }),
+                    success: loadTodos,
+                    error: function (xhr) { alert('Error updating todo: ' + xhr.responseText); }
+                });
+            }
+
+            // Delete todo
+            function deleteTodo(id) {
+                $.ajax({
+                    url: '/api/TodoApi/' + id,
+                    type: 'DELETE',
+                    success: loadTodos,
+                    error: function (xhr) { alert('Error deleting todo: ' + xhr.responseText); }
+                });
+            }
+        });
+    </script>
+}

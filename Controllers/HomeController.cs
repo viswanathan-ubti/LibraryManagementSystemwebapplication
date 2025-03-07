@@ -14,5 +14,9 @@ namespace LibraryManagementSystem.Mvc.Controllers
         {
             return View();
         }
+        public IActionResult Todo()
+        {
+            return View();
+        }
     }
 }

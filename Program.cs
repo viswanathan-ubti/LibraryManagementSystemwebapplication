@@ -18,6 +18,10 @@ builder.Services.AddSession(options =>
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDB")));
 
+// In-memory context for Todo List
+builder.Services.AddDbContext<TodoDbContext>(options =>
+    options.UseInMemoryDatabase("TodoListDB"));
+
 // Register services
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<BookService>();
@@ -43,6 +47,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Enable API Routing
+app.MapControllers();
 app.Run();
 
 
