@@ -2,6 +2,8 @@ using LibraryManagementSystem.Models;
 using LibraryManagementSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace LibraryManagementSystem.Mvc.Controllers
 {
@@ -10,15 +12,18 @@ namespace LibraryManagementSystem.Mvc.Controllers
         private readonly UserService _userService;
         private readonly BookService _bookService;
         private readonly BorrowService _borrowService;
+        private readonly JwtService _jwtService;
 
-        public SubscriberController(UserService userService, BookService bookService, BorrowService borrowService)
+        public SubscriberController(UserService userService, BookService bookService, BorrowService borrowService, JwtService jwtService)
         {
             _userService = userService;
             _bookService = bookService;
             _borrowService = borrowService;
+            _jwtService = jwtService;
         }
 
         // GET: /Subscriber/Login
+        [AllowAnonymous]
         public IActionResult Login()
         {
             return View();
@@ -26,6 +31,7 @@ namespace LibraryManagementSystem.Mvc.Controllers
 
         // POST: /Subscriber/Login
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(string libraryCode)
         {
             try
@@ -33,7 +39,14 @@ namespace LibraryManagementSystem.Mvc.Controllers
                 var (success, message) = await _userService.ValidateUser(libraryCode);
                 if (success)
                 {
-                    HttpContext.Session.SetString("LibraryCode", libraryCode);
+                    var user = await _userService.GetUserDetails(libraryCode);
+                    var token = _jwtService.GenerateToken(user);
+                    HttpContext.Response.Cookies.Append("jwt", token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict
+                    });
                     return RedirectToAction("Index");
                 }
                 ViewBag.Error = message;
@@ -47,13 +60,9 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Subscriber/Index (Subscriber Dashboard)
+        [Authorize(Roles = "Subscriber")]
         public async Task<IActionResult> Index()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("LibraryCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var books = await _bookService.GetAllBooks();
@@ -67,27 +76,20 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Subscriber/BorrowBook
+        [Authorize(Roles = "Subscriber")]
         public IActionResult BorrowBook()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("LibraryCode")))
-            {
-                return RedirectToAction("Login");
-            }
             return View();
         }
 
         // POST: /Subscriber/BorrowBook
         [HttpPost]
+        [Authorize(Roles = "Subscriber")]
         public async Task<IActionResult> BorrowBook(string bookCode)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("LibraryCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
-                var libraryCode = HttpContext.Session.GetString("LibraryCode");
+                var libraryCode = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var (success, message) = await _borrowService.BorrowBook(libraryCode, bookCode);
                 if (success)
                 {
@@ -105,27 +107,20 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Subscriber/ReturnBook
+        [Authorize(Roles = "Subscriber")]
         public IActionResult ReturnBook()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("LibraryCode")))
-            {
-                return RedirectToAction("Login");
-            }
             return View();
         }
 
         // POST: /Subscriber/ReturnBook
         [HttpPost]
+        [Authorize(Roles = "Subscriber")]
         public async Task<IActionResult> ReturnBook(string bookCode)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("LibraryCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
-                var libraryCode = HttpContext.Session.GetString("LibraryCode");
+                var libraryCode = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var (success, message) = await _borrowService.ReturnBook(libraryCode, bookCode);
                 TempData["Message"] = message;
                 return RedirectToAction("Index");
@@ -138,16 +133,12 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Subscriber/SubscriptionDetails
+        [Authorize(Roles = "Subscriber")]
         public async Task<IActionResult> SubscriptionDetails()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("LibraryCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
-                var libraryCode = HttpContext.Session.GetString("LibraryCode");
+                var libraryCode = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var user = await _userService.GetUserDetails(libraryCode);
                 return View(user);
             }
@@ -160,16 +151,12 @@ namespace LibraryManagementSystem.Mvc.Controllers
 
         // POST: /Subscriber/RenewSubscription
         [HttpPost]
+        [Authorize(Roles = "Subscriber")]
         public async Task<IActionResult> RenewSubscription()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("LibraryCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
-                var libraryCode = HttpContext.Session.GetString("LibraryCode");
+                var libraryCode = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var (success, message) = await _userService.RenewSubscription(libraryCode);
                 TempData["Message"] = message;
                 return RedirectToAction("SubscriptionDetails");
@@ -182,9 +169,10 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Subscriber/Logout
+        [Authorize(Roles = "Subscriber")]
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear();
+            HttpContext.Response.Cookies.Delete("jwt");
             return RedirectToAction("Index", "Home");
         }
     }

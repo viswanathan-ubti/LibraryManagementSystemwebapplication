@@ -15,7 +15,7 @@ namespace LibraryManagementSystem.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        // Register a new admin with hashed password
+        // Register new admin with hashed password
         public async Task<(bool Success, string Message)> RegisterAdmin(string name, string adminCode, string password)
         {
             try
@@ -61,7 +61,7 @@ namespace LibraryManagementSystem.Services
             }
         }
 
-        // Renew a user subscription
+        // Renew user subscription
         public async Task<(bool Success, string Message)> RenewUserSubscription(string libraryCode)
         {
             try
@@ -80,6 +80,24 @@ namespace LibraryManagementSystem.Services
             catch (Exception ex)
             {
                 return (false, $"Error renewing user subscription: {ex.Message}");
+            }
+        }
+
+        // Get admin by admin code
+        public async Task<Admin> GetAdminByCode(string adminCode)
+        {
+            try
+            {
+                var admin = await _context.Admins.FirstOrDefaultAsync(a => a.AdminCode == adminCode);
+                if (admin == null)
+                {
+                    throw new Exception("Admin not found!");
+                }
+                return admin;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving admin: {ex.Message}");
             }
         }
     }

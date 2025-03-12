@@ -1,17 +1,55 @@
 using LibraryManagementSystem.Data;
 using LibraryManagementSystem.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Session;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession(options =>
+
+// Configure JWT Authentication
+builder.Services.AddAuthentication(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+    // Extract token from cookie if Authorization header is missing
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Cookies["jwt"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+                Console.WriteLine($"JWT Token extracted from cookie: {token}"); 
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
+
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+    logging.SetMinimumLevel(LogLevel.Debug);
 });
 
 // Register DbContext with connection string from appsettings.json
@@ -27,6 +65,7 @@ builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<BookService>();
 builder.Services.AddScoped<BorrowService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<JwtService>();
 
 var app = builder.Build();
 
@@ -40,15 +79,13 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Enable API Routing
 app.MapControllers();
 app.Run();
-
-

@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LibraryManagementSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] 
     public class TodoApiController : ControllerBase
     {
         private readonly TodoDbContext _context;

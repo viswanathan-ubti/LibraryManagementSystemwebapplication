@@ -2,6 +2,9 @@ using LibraryManagementSystem.Models;
 using LibraryManagementSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace LibraryManagementSystem.Mvc.Controllers
 {
@@ -10,15 +13,18 @@ namespace LibraryManagementSystem.Mvc.Controllers
         private readonly AdminService _adminService;
         private readonly BookService _bookService;
         private readonly UserService _userService;
+        private readonly JwtService _jwtService;
 
-        public AdminController(AdminService adminService, BookService bookService, UserService userService)
+        public AdminController(AdminService adminService, BookService bookService, UserService userService, JwtService jwtService)
         {
             _adminService = adminService;
             _bookService = bookService;
             _userService = userService;
+            _jwtService = jwtService;
         }
 
         // GET: /Admin/Login
+        [AllowAnonymous] 
         public IActionResult Login()
         {
             return View();
@@ -26,6 +32,7 @@ namespace LibraryManagementSystem.Mvc.Controllers
 
         // POST: /Admin/Login
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(string adminCode, string password)
         {
             try
@@ -33,7 +40,17 @@ namespace LibraryManagementSystem.Mvc.Controllers
                 var (success, message) = await _adminService.ValidateAdmin(adminCode, password);
                 if (success)
                 {
-                    HttpContext.Session.SetString("AdminCode", adminCode);
+                    var admin = await _adminService.GetAdminByCode(adminCode);
+                    var token = _jwtService.GenerateToken(admin);
+                    Console.WriteLine($"Generated JWT Token: {token}");
+                    HttpContext.Response.Cookies.Append("jwt", token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = false, 
+                        SameSite = SameSiteMode.Lax,
+                        Expires = DateTimeOffset.Now.AddMinutes(60)
+                    });
+                    Console.WriteLine("JWT Cookie set successfully");
                     return RedirectToAction("Index");
                 }
                 ViewBag.Error = message;
@@ -47,6 +64,7 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Admin/Register
+        [AllowAnonymous]
         public IActionResult Register()
         {
             return View();
@@ -54,6 +72,7 @@ namespace LibraryManagementSystem.Mvc.Controllers
 
         // POST: /Admin/Register
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(string name, string adminCode, string password)
         {
             try
@@ -74,23 +93,16 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Admin/Index (Admin Dashboard)
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
             return View();
         }
 
         // GET: /Admin/ManageBooks
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ManageBooks()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var books = await _bookService.GetAllBooks();
@@ -104,24 +116,17 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Admin/AddBook
+        [Authorize(Roles = "Admin")]
         public IActionResult AddBook()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
             return View();
         }
 
         // POST: /Admin/AddBook
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddBook(string title, string author, string bookCode)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var (success, message) = await _bookService.AddBook(title, author, bookCode);
@@ -141,13 +146,9 @@ namespace LibraryManagementSystem.Mvc.Controllers
 
         // POST: /Admin/RemoveBook
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveBook(string bookCode)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var (success, message) = await _bookService.RemoveBook(bookCode);
@@ -162,13 +163,9 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Admin/ManageUsers
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ManageUsers()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var users = await _userService.GetAllUsers();
@@ -182,24 +179,17 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Admin/AddUser
+        [Authorize(Roles = "Admin")]
         public IActionResult AddUser()
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
             return View();
         }
 
         // POST: /Admin/AddUser
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddUser(string name, string libraryCode)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var (success, message) = await _userService.AddUser(name, libraryCode);
@@ -219,13 +209,9 @@ namespace LibraryManagementSystem.Mvc.Controllers
 
         // POST: /Admin/RemoveUser
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveUser(string libraryCode)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var (success, message) = await _userService.RemoveUser(libraryCode);
@@ -241,13 +227,9 @@ namespace LibraryManagementSystem.Mvc.Controllers
 
         // POST: /Admin/RenewUserSubscription
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RenewUserSubscription(string libraryCode)
         {
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminCode")))
-            {
-                return RedirectToAction("Login");
-            }
-
             try
             {
                 var (success, message) = await _adminService.RenewUserSubscription(libraryCode);
@@ -262,9 +244,10 @@ namespace LibraryManagementSystem.Mvc.Controllers
         }
 
         // GET: /Admin/Logout
+        [Authorize(Roles = "Admin")]
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear();
+            HttpContext.Response.Cookies.Delete("jwt");
             return RedirectToAction("Index", "Home");
         }
     }
