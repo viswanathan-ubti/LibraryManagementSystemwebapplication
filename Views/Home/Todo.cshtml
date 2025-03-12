@@ -23,111 +23,106 @@ else
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $("#backButton").click(function () {
-            var role = '@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value';
-            if (role === 'Admin') {
-                window.location.href = '/Admin/Index';
-            } else if (role === 'Subscriber') {
-                window.location.href = '/Subscriber/Index';
-            } else {
-                window.location.href = '/Home/Index'; 
-            }
-        });
         $(document).ready(function () {
-            if (User.Identity.IsAuthenticated)
+            @if (User.Identity.IsAuthenticated)
             {
-                 // Load todos on page load
-                 loadTodos();
+                @: // Load todos on page load
+                @: loadTodos();
 
-                 // Add todo
-                 $("#addTodo").click(function () {
-                     var title = $("#todoTitle").val();
-                     if (title) {
-                         $.ajax({
-                             url: '/api/TodoApi',
-                             type: 'POST',
-                             contentType: 'application/json',
-                             data: JSON.stringify({ title: title, isCompleted: false }),
-                             headers: {
-                                 'Authorization': 'Bearer ' + getJwtToken()
-                             },
-                             success: function () {
-                                 $("#todoTitle").val('');
-                                 loadTodos();
-                             },
-                             error: function (xhr) {
-                                 alert('Error adding todo: ' + xhr.responseText);
-                             }
-                         });
-                     }
-                 });
+                @: // Add todo
+                @: $("#addTodo").click(function () {
+                @:     var title = $("#todoTitle").val();
+                @:     if (title) {
+                @:         $.ajax({
+                @:             url: '/api/TodoApi',
+                @:             type: 'POST',
+                @:             contentType: 'application/json',
+                @:             data: JSON.stringify({ title: title, isCompleted: false }),
+                @:             headers: {
+                @:                 'Authorization': 'Bearer ' + getJwtToken()
+                @:             },
+                @:             success: function () {
+                @:                 $("#todoTitle").val('');
+                @:                 loadTodos();
+                @:             },
+                @:             error: function (xhr) {
+                @:                 alert('Error adding todo: ' + xhr.responseText);
+                @:             }
+                @:         });
+                @:     }
+                @: });
 
-                 // Load todos
-                 function loadTodos() {
-                     $.ajax({
-                         url: '/api/TodoApi',
-                         type: 'GET',
-                         headers: {
-                             'Authorization': 'Bearer ' + getJwtToken()
-                         },
-                         success: function (data) {
-                             $("#todoList").empty();
-                             data.forEach(function (todo) {
-                                 var li = $('<li class="list-group-item d-flex justify-content-between align-items-center"></li>')
-                                     .text(todo.title)
-                                     .append($('<input type="checkbox" class="form-check-input me-2">')
-                                         .prop('checked', todo.isCompleted)
-                                         .change(function () { updateTodo(todo.id, $(this).is(':checked')); }))
-                                     .append($('<button class="btn btn-danger btn-sm">Delete</button>')
-                                         .click(function () { deleteTodo(todo.id); }));
-                                 $("#todoList").append(li);
-                             });
-                         },
-                         error: function (xhr) {
-                             alert('Error loading todos: ' + xhr.responseText);
-                         }
-                     });
-                 }
+                @: // Back button functionality
+                @: $("#backButton").click(function () {
+                @:     history.back();
+                @: });
 
-                 // Update todo completion
-                 function updateTodo(id, isCompleted) {
-                     $.ajax({
-                         url: '/api/TodoApi/' + id,
-                         type: 'PUT',
-                         contentType: 'application/json',
-                         data: JSON.stringify({ id: id, title: '', isCompleted: isCompleted }),
-                         headers: {
-                             'Authorization': 'Bearer ' + getJwtToken()
-                         },
-                         success: loadTodos,
-                         error: function (xhr) { alert('Error updating todo: ' + xhr.responseText); }
-                     });
-                 }
+                @: // Load todos
+                @: function loadTodos() {
+                @:     $.ajax({
+                @:         url: '/api/TodoApi',
+                @:         type: 'GET',
+                @:         headers: {
+                @:             'Authorization': 'Bearer ' + getJwtToken()
+                @:         },
+                @:         success: function (data) {
+                @:             $("#todoList").empty();
+                @:             data.forEach(function (todo) {
+                @:                 var li = $('<li class="list-group-item d-flex justify-content-between align-items-center"></li>')
+                @:                     .text(todo.title)
+                @:                     .append($('<input type="checkbox" class="form-check-input me-2">')
+                @:                         .prop('checked', todo.isCompleted)
+                @:                         .change(function () { updateTodo(todo.id, $(this).is(':checked')); }))
+                @:                     .append($('<button class="btn btn-danger btn-sm">Delete</button>')
+                @:                         .click(function () { deleteTodo(todo.id); }));
+                @:                 $("#todoList").append(li);
+                @:             });
+                @:         },
+                @:         error: function (xhr) {
+                @:             alert('Error loading todos: ' + xhr.responseText);
+                @:         }
+                @:     });
+                @: }
 
-                 // Delete todo
-                 function deleteTodo(id) {
-                     $.ajax({
-                         url: '/api/TodoApi/' + id,
-                         type: 'DELETE',
-                         headers: {
-                             'Authorization': 'Bearer ' + getJwtToken()
-                         },
-                         success: loadTodos,
-                         error: function (xhr) { alert('Error deleting todo: ' + xhr.responseText); }
-                     });
-                 }
+                @: // Update todo completion
+                @: function updateTodo(id, isCompleted) {
+                @:     $.ajax({
+                @:         url: '/api/TodoApi/' + id,
+                @:         type: 'PUT',
+                @:         contentType: 'application/json',
+                @:         data: JSON.stringify({ id: id, title: '', isCompleted: isCompleted }),
+                @:         headers: {
+                @:             'Authorization': 'Bearer ' + getJwtToken()
+                @:         },
+                @:         success: loadTodos,
+                @:         error: function (xhr) { alert('Error updating todo: ' + xhr.responseText); }
+                @:     });
+                @: }
 
-                 // Function to get JWT token from cookie
-                 function getJwtToken() {
-                     var cookies = document.cookie.split(';');
-                     for (var i = 0; i < cookies.length; i++) {
-                         var cookie = cookies[i].trim();
-                         if (cookie.startsWith('jwt=')) {
-                             return cookie.substring('jwt='.length);
-                         }
-                     }
-                     return null;
-                 }
+                @: // Delete todo
+                @: function deleteTodo(id) {
+                @:     $.ajax({
+                @:         url: '/api/TodoApi/' + id,
+                @:         type: 'DELETE',
+                @:         headers: {
+                @:             'Authorization': 'Bearer ' + getJwtToken()
+                @:         },
+                @:         success: loadTodos,
+                @:         error: function (xhr) { alert('Error deleting todo: ' + xhr.responseText); }
+                @:     });
+                @: }
+
+                @: // Function to get JWT token from cookie
+                @: function getJwtToken() {
+                @:     var cookies = document.cookie.split(';');
+                @:     for (var i = 0; i < cookies.length; i++) {
+                @:         var cookie = cookies[i].trim();
+                @:         if (cookie.startsWith('jwt=')) {
+                @:             return cookie.substring('jwt='.length);
+                @:         }
+                @:     }
+                @:     return null;
+                @: }
             }
         });
     </script>
